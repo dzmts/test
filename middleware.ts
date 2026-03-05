@@ -1,33 +1,36 @@
+// proxy.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function proxy(req: NextRequest) {
+// 1. Rename to 'proxy' to match the Next.js 16 convention
+export async function proxy(req: NextRequest) {
   const url = req.nextUrl.clone();
 
-  // 1. Only act on the landing page path
   if (url.pathname !== "/lp") return NextResponse.next();
 
-  // 2. Bucket the user — check cookie first, then assign randomly
-  let variant = req.cookies.get("ab-test-variant")?.value;
+  // Next.js 16 context: Accessing cookies is now asynchronous
+  const cookieStore = req.cookies;
+  let variant = cookieStore.get("ab-test-variant")?.value;
+
   if (!variant) {
     variant = Math.random() < 0.5 ? "A" : "B";
   }
 
-  // 3. Inject the variant as a query parameter.
-  //    This preserves all original params (gclid, utms, fbclid, etc.) and appends &variant=X.
   url.searchParams.set("variant", variant);
 
   let response: NextResponse;
 
+  // IMPORTANT: Google/Bing will still force a redirect because of their
+  // security headers. For a real 'masking' test, use your Web2Wave URL.
   if (variant === "A") {
-    response = NextResponse.rewrite(new URL("https://google.com", req.url));
+    response = NextResponse.rewrite(new URL("https://dancebit-next.gistage.com", req.url));
   } else {
-    response = NextResponse.rewrite(new URL("https://bing.com", req.url));
+    // This uses your internal rewrite rule from next.config.ts
+    response = NextResponse.rewrite(new URL(`https://skin.luvly.care`, req.url));
   }
 
-  // 4. Persist the assigned variant in a cookie as a fallback for subsequent page loads
   response.cookies.set("ab-test-variant", variant, {
-    maxAge: 60 * 60 * 24 * 30, // 30 days
+    maxAge: 60 * 60 * 24 * 30,
     path: "/",
   });
 
@@ -35,6 +38,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Run this proxy only for the landing page
   matcher: ["/lp"],
 };
