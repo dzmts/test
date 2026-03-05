@@ -8,7 +8,7 @@ A Vercel Edge Proxy (zero-redirect) that A/B splits traffic between two funnels 
 Browser → your-proxy.vercel.app/lp?utm_source=meta
               │
               ▼  (Edge, ~30 ms)
-         proxy.ts
+         middleware.ts
               │
               ├── variant=A  →  rewrite → https://custom-funnel.brand.com/lp?utm_source=meta&variant=A
               └── variant=B  →  rewrite → /web2wave-internal?utm_source=meta&variant=B
@@ -25,8 +25,8 @@ Browser → your-proxy.vercel.app/lp?utm_source=meta
 | Placeholder | File | Replace with |
 |---|---|---|
 | `https://your-funnel.web2wave.com` | `next.config.ts` | Your Web2Wave funnel URL |
-| `https://custom-funnel.brand.com` | `proxy.ts` | Your custom funnel URL |
-| `/lp` | `proxy.ts` | The landing page path you want to split |
+| `https://custom-funnel.brand.com` | `middleware.ts` | Your custom funnel URL |
+| `/lp` | `middleware.ts` | The landing page path you want to split |
 
 ## Getting Started
 
